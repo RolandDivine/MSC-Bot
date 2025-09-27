@@ -26,3 +26,16 @@ export async function getLogs(params: {
     return [];
   }
 }
+
+/** Fetch a block's timestamp for a given blockNumber via Etherscan. */
+export async function getBlockTimestamp(blockNumber: number, apiKey: string): Promise<number | null> {
+  try {
+    const url = `${BASE}?module=block&action=getblockreward&blockno=${blockNumber}&apikey=${apiKey}`;
+    const { data } = await axios.get(url, { timeout: 12000 });
+    const ts = Number(data?.result?.timeStamp);
+    return Number.isFinite(ts) ? ts : null;
+  } catch (e: any) {
+    logger.warn({ err: e?.message }, 'getBlockTimestamp failed');
+    return null;
+  }
+}
