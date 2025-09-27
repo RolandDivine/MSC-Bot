@@ -1,3 +1,4 @@
+// src/etherscan.ts
 import axios from 'axios';
 import { logger } from './logger.js';
 
@@ -27,15 +28,14 @@ export async function getLogs(params: {
   }
 }
 
-/** Fetch a block's timestamp for a given blockNumber via Etherscan. */
-export async function getBlockTimestamp(blockNumber: number, apiKey: string): Promise<number | null> {
+export async function getWalletFirstTx(address: string, apiKey: string): Promise<Date | null> {
+  const url = `${BASE}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=1&sort=asc&apikey=${apiKey}`;
   try {
-    const url = `${BASE}?module=block&action=getblockreward&blockno=${blockNumber}&apikey=${apiKey}`;
-    const { data } = await axios.get(url, { timeout: 12000 });
-    const ts = Number(data?.result?.timeStamp);
-    return Number.isFinite(ts) ? ts : null;
-  } catch (e: any) {
-    logger.warn({ err: e?.message }, 'getBlockTimestamp failed');
+    const { data } = await axios.get(url, { timeout: 15000 });
+    if (data.status !== '1' || data.result.length === 0) return null;
+    const ts = Number(data.result[0].timeStamp) * 1000;
+    return new Date(ts);
+  } catch {
     return null;
   }
 }
